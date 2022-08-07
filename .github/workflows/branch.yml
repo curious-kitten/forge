@@ -1,24 +1,27 @@
-# This is a basic workflow to help you get started with Actions
+name: Pull Request flow
 
-name: On Dev Branch
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
 on:
-  push:
-    branches-ignore: [ master ]
+  pull_request: {}
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # Runs the linter
-  golangci:
+  lint:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v1
+        uses: golangci/golangci-lint-action@v3
         with:
-          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: v1.29
-          
+          version: v1.45
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: test
+      shell: bash
+      run:  go test -v --short --race -json -coverprofile=coverage.out ./... > unit-test.json
+    - name: annotate
+      if: always()
+      uses: guyarb/golang-test-annotations@v0.5.1
+      with:
+        test-results: unit-test.json

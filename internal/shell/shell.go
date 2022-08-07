@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"os/exec"
+	"strings"
 )
 
 type Executor struct {
@@ -13,8 +14,13 @@ type Executor struct {
 }
 
 func (e *Executor) Execute(command string) error {
-	cmd := exec.Command(SHELL, EXEC, command)
-	cmd.Stdout = e.Out
-	cmd.Stderr = e.Err
-	return cmd.Run()
+	for _, v := range strings.Split(command, "\n") {
+		cmd := exec.Command(SHELL, EXEC, v)
+		cmd.Stdout = e.Out
+		cmd.Stderr = e.Err
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

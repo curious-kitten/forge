@@ -1,0 +1,16 @@
+tools:
+- name: simpleCmd
+  description: A single line coommand
+  cmd: echo simpleCmd
+- name: multilineCmd
+  description: a multi line command
+  cmd: |
+    echo line 1
+    echo line 2
+- name: templateCmd
+  description: Using a template for the CMD
+  args:
+    - name: name
+      default: hello world
+  cmd: |-
+    echo {{.name}}
