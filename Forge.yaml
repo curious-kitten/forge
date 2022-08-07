@@ -1,0 +1,41 @@
+tools:
+- name: shouldSucceed
+  description: A forgery that should succeed
+  args:
+    - name: name
+      default: hello world
+    - name: Salute
+      default: Hello
+  cmd: |-
+    echo {{.name}}
+- name: anotherSuccess
+  description: Another forgery that should succeed
+  cmd: forge
+- name: shouldFail
+  description: A forgery that should always fail
+  cmd: exit 1
+forges:
+- name: passing
+  executions:
+  - name: shouldSucceed
+    always: false
+- name: passing2
+  executions:
+  - name: anotherSuccess
+    always: false
+- name: failing
+  executions:
+  - name: shouldFail
+    always: false
+- name: multiPass
+  executions:
+  - name: shouldSucceed
+    always: false
+  - name: anotherSuccess
+    always: false
+- name: multiExecFail
+  executions:
+  - name: shouldSucceed
+    always: false
+  - name: shouldFail
+    always: false
