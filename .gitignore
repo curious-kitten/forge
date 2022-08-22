@@ -20,3 +20,5 @@ Forge
 reports.xml
 
 .vscode
+
+dist/
