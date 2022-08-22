@@ -1,0 +1,24 @@
+name: Test
+description: Run short tests
+
+
+inputs:
+  goVersion:
+    default: '1.18'
+    required: false
+    description: Version of go to be installed
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ inputs.goVersion }}
+    - name: Unit Tests
+      shell: bash
+      run:  go test -v --short --race -json -coverprofile=coverage.out ./... > unit-test.json
+    - name: Annotate tests
+      if: always()
+      uses: guyarb/golang-test-annotations@v0.5.1
+      with:
+        test-results: unit-test.json
