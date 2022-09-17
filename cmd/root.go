@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,9 +23,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mimatache/forge/cmd/completion"
-	"github.com/mimatache/forge/cmd/execute"
-	"github.com/mimatache/forge/internal/forgery"
+	"github.com/cruious-kitten/forge/cmd/completion"
+	"github.com/cruious-kitten/forge/cmd/execute"
+	"github.com/cruious-kitten/forge/cmd/run"
+	"github.com/cruious-kitten/forge/cmd/version"
+	"github.com/cruious-kitten/forge/pkg/forge"
 )
 
 var forgeFile string
@@ -44,8 +46,10 @@ func Root() *cobra.Command {
 	`,
 	}
 	setFilePath(rootCmd)
+	rootCmd.AddCommand(version.Command())
 	rootCmd.AddCommand(completion.Command(rootCmd))
 	rootCmd.AddCommand(execute.Command(getForgery(forgeFile)))
+	rootCmd.AddCommand(run.Command(getForgery(forgeFile)))
 
 	return rootCmd
 }
@@ -58,17 +62,17 @@ func setFilePath(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&forgeFile, "file", "f", filepath.Join(wd, "Forge.yaml"), "Forge.yaml file (default is Forge in current directory)")
 }
 
-func getForgery(filePath string) func() (forgery.Forge, error) {
-	return func() (forgery.Forge, error) {
+func getForgery(filePath string) func() (forge.Forge, error) {
+	return func() (forge.Forge, error) {
 		f, err := os.Open(filePath)
 		if err != nil {
-			return nil, err
+			return forge.Forge{}, err
 		}
 		defer f.Close()
-		forge, err := forgery.Read(f)
+		forgery, err := forge.FromFile(f)
 		if err != nil {
-			return nil, fmt.Errorf("%w: file %s", err, filePath)
+			return forge.Forge{}, fmt.Errorf("%w: file %s", err, filePath)
 		}
-		return forge, nil
+		return forgery, nil
 	}
 }

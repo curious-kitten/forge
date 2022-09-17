@@ -5,8 +5,8 @@ tools:
 - name: multilineCmd
   description: a multi line command
   cmd: |
-    echo line 1
-    echo line 2
+    echo line 1 
+    echo line 2 
 - name: templateCmd
   description: Using a template for the CMD
   args:

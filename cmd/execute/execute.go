@@ -6,51 +6,45 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mimatache/forge/internal/forgery"
-	"github.com/mimatache/forge/internal/shell"
 	"github.com/spf13/cobra"
+
+	"github.com/cruious-kitten/forge/internal/shell"
+	"github.com/cruious-kitten/forge/pkg/forge"
 )
 
-type forgeryReader func() (forgery.Forge, error)
+type forgeryReader func() (forge.Forge, error)
 
 var values []string
 
-func Command(reader forgeryReader) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "exec",
-		Short: "execute a tool",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			f, err := reader()
-			if err != nil {
-				return err
-			}
-			if len(args) != 1 {
-				return fmt.Errorf("%s command expects an argument to be vicen representing the tool name", cmd.Name())
-			}
-			v, err := f.GetTool(args[0])
-			if err != nil {
-				return err
-			}
+func argProvider(fr forgeryReader) []string {
+	f, err := fr()
+	if err != nil {
+		return []string{}
+	}
+	return f.GetTools()
+}
 
-			options := []forgery.Option{}
+func Command(fr forgeryReader) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:       "exec [tool]",
+		Short:     "execute a tool",
+		Args:      cobra.ExactValidArgs(1),
+		ValidArgs: argProvider(fr),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			f, err := fr()
+			if err != nil {
+				return err
+			}
+			exec := shell.VerboseExecutor(os.Stdout, os.Stderr, shell.NewExecutor(context.Background()))
+			cmdArgs := make(map[string]string, len(values))
 			for _, v := range values {
 				vls := strings.SplitN(v, "=", 2)
 				if len(vls) != 2 {
 					return fmt.Errorf("invalid set argument: %s", v)
 				}
-				options = append(options, forgery.WithArgument(vls[0], vls[1]))
+				cmdArgs[vls[0]] = vls[1]
 			}
-
-			c, err := v.Command(options...)
-			if err != nil {
-				return err
-			}
-			exec := shell.Executor{
-				Ctx: context.Background(),
-				Out: os.Stdout,
-				Err: os.Stderr,
-			}
-			err = exec.Execute(c)
+			_, err = f.RunTool(exec, args[0], cmdArgs)
 			if err != nil {
 				cmd.SilenceUsage = true
 				return err
