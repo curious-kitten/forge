@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/mimatache/forge/cmd"
+	"github.com/cruious-kitten/forge/cmd"
 )
 
 func main() {

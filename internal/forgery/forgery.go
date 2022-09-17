@@ -1,93 +1,58 @@
 package forgery
 
 import (
-	"bytes"
 	"errors"
-	"io"
-	"text/template"
+	"fmt"
+	"strings"
+)
 
-	"gopkg.in/yaml.v3"
+const (
+	outputPrefix = "output."
 )
 
 var (
-	ErrToolNotFound = errors.New("could not find tool")
+	ErrTmplBuildFailuer = errors.New("error while building the template")
+	ErrTmplExecFailuer  = errors.New("error while executing the template")
 )
 
-type forge struct {
-	Tools []Tool `yaml:"tools"`
-}
+type RunTool func(name string, args map[string]string) (string, error)
 
-func (f forge) GetTool(name string) (Commander, error) {
-	for _, v := range f.Tools {
-		if v.Name == name {
-			return v, nil
-		}
-	}
-	return nil, ErrToolNotFound
+type Forgery struct {
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
+	Tools       []Tool `yaml:"tools"`
 }
 
 type Tool struct {
-	Name        string     `yaml:"name"`
-	Description string     `yaml:"description"`
-	Args        []Argument `yaml:"args"`
-	Cmd         string     `yaml:"cmd"`
-}
-
-func (t Tool) Command(o ...Option) (string, error) {
-	opts := options{
-		args: map[string]string{},
-	}
-	for _, arg := range t.Args {
-		if arg.Default != "" {
-			opts.args[arg.Name] = arg.Default
-		}
-	}
-	for _, opt := range o {
-		opts = opt(opts)
-	}
-	tmpl, err := template.New("cmd").Parse(t.Cmd)
-	if err != nil {
-		return "", err
-	}
-	buff := &bytes.Buffer{}
-	err = tmpl.ExecuteTemplate(buff, "cmd", opts.args)
-	if err != nil {
-		return "", err
-	}
-	return buff.String(), nil
+	Args   map[string]string `yaml:"args"`
+	Name   string            `yaml:"name"`
+	Output string            `yaml:"output"`
 }
 
 type Argument struct {
-	Name    string `yaml:"name"`
-	Default string `yaml:"default"`
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
 }
 
-func Read(file io.Reader) (Forge, error) {
-	frg := forge{}
-	decoder := yaml.NewDecoder(file)
-	if err := decoder.Decode(&frg); err != nil {
-		return frg, err
+func (f Forgery) RunForgery(run RunTool) error {
+	outputs := map[string]string{}
+	for _, tls := range f.Tools {
+		for k, v := range tls.Args {
+			if !strings.HasPrefix(v, outputPrefix) {
+				continue
+			}
+
+			val, ok := outputs[strings.TrimPrefix(v, outputPrefix)]
+			if !ok {
+				continue
+			}
+			tls.Args[k] = val
+		}
+		output, err := run(tls.Name, tls.Args)
+		outputs[tls.Output] = output
+		if err != nil {
+			return fmt.Errorf("forgery exited with errors")
+		}
 	}
-	return frg, nil
-}
-
-type Forge interface {
-	GetTool(name string) (Commander, error)
-}
-
-type options struct {
-	args map[string]string
-}
-
-type Option func(options) options
-
-func WithArgument(key, value string) Option {
-	return func(o options) options {
-		o.args[key] = value
-		return o
-	}
-}
-
-type Commander interface {
-	Command(opts ...Option) (string, error)
+	return nil
 }

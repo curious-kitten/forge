@@ -1,41 +1,34 @@
 tools:
-- name: shouldSucceed
-  description: A forgery that should succeed
+- name: build
   args:
-    - name: name
-      default: hello world
-    - name: Salute
-      default: Hello
-  cmd: |-
-    echo {{.name}}
-- name: anotherSuccess
-  description: Another forgery that should succeed
-  cmd: forge
-- name: shouldFail
-  description: A forgery that should always fail
-  cmd: exit 1
-forges:
-- name: passing
-  executions:
-  - name: shouldSucceed
-    always: false
-- name: passing2
-  executions:
-  - name: anotherSuccess
-    always: false
-- name: failing
-  executions:
-  - name: shouldFail
-    always: false
-- name: multiPass
-  executions:
-  - name: shouldSucceed
-    always: false
-  - name: anotherSuccess
-    always: false
-- name: multiExecFail
-  executions:
-  - name: shouldSucceed
-    always: false
-  - name: shouldFail
-    always: false
+    - name: version
+      default: dev
+    - name: hash
+      default: 123#456
+    - name: date
+  description: Go install the local package
+  cmd: go build -v -ldflags="-X 'github.com/cruious-kitten/forge/internal/info.Version={{.version}}' -X 'github.com/cruious-kitten/forge/internal/info.CommitHash={{.hash}}' -X 'github.com/cruious-kitten/forge/internal/info.BuildDate={{.date}}'" .
+
+- name: git-tag
+  cmd: git describe --tags --dirty --always
+
+- name: build-date
+  cmd: date +%FT%T%z
+
+- name: hash
+  cmd: git rev-parse --short HEAD 2>/dev/null
+
+forgeries:
+  - name: release
+    tools:
+    - name: build-date
+      output: date
+    - name: hash
+      output: hash
+    - name: git-tag
+      output: tag
+    - name: build
+      args:
+        version: output.tag
+        date: output.date
+        hash: output.hash
