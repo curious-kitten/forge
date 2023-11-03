@@ -57,8 +57,6 @@ type ShellWritter struct {
 }
 
 func (s *ShellWritter) Execute(command string) (string, error) {
-	fmt.Fprintln(s.Out)
-	fmt.Fprintln(s.Out, color.InBlue("------------------------------------------"))
 	sp := spinner.New(spinner.CharSets[78], 100*time.Millisecond)
 	spErr := sp.Color("blue")
 	if spErr == nil {
@@ -70,12 +68,10 @@ func (s *ShellWritter) Execute(command string) (string, error) {
 	if spErr == nil {
 		sp.Stop()
 	}
-	fmt.Fprintln(s.Out, color.InBlue("cmd:"), command)
-	fmt.Println()
 	if execErr != nil {
+		fmt.Fprintln(s.Out, color.InRed(command))
 		fmt.Fprintln(s.Err, color.InRed("error: "), execErr.Error())
 	}
-	fmt.Fprintln(s.Out, color.InWhite(v))
-	fmt.Fprintln(s.Out, color.InBlue("------------------------------------------"))
+	fmt.Fprintln(s.Out, color.InGreen("✅︎"+command))
 	return v, execErr
 }

@@ -39,10 +39,11 @@ func Root() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "forge",
 		Short: "Forge helps developers and system administrators to create command chains that can be easily executed",
-		Long: `Forge uses a yaml file structure where you can define complex actions that can be executed from a simple CLI.
-	Forgeries defined in forge carry the name "forgery". 
-	You can define a forgery by simply providing if with a name and commands to execute, a list of predefined forgeries or a
-	combination of the two.
+		Long: `
+Forge uses a yaml file structure where you can define complex actions that can be executed from a simple CLI.
+Forgeries defined in forge carry the name "forgery". 
+You can define a forgery by simply providing if with a name and commands to execute, a list of predefined forgeries or a
+combination of the two.
 	`,
 	}
 	setFilePath(rootCmd)
