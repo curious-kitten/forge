@@ -24,10 +24,18 @@ func argProvider(fr forgeryReader) []string {
 	return f.GetTools()
 }
 
+const longDescription = `
+A toll is a single execution "script" that will be run.
+A tool can have as little as one shell command or multiple commands that will be executed.
+Single command example:
+
+`
+
 func Command(fr forgeryReader) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:       "exec [tool]",
-		Short:     "execute a tool",
+		Short:     "Execute a tool",
+		Long:      longDescription,
 		Args:      cobra.ExactValidArgs(1),
 		ValidArgs: argProvider(fr),
 		RunE: func(cmd *cobra.Command, args []string) error {

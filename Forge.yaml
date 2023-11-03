@@ -6,8 +6,27 @@ tools:
     - name: hash
       default: 123#456
     - name: date
-  description: Go install the local package
+  description: Go build the local package
   cmd: go build -v -ldflags="-X 'github.com/cruious-kitten/forge/internal/info.Version={{.version}}' -X 'github.com/cruious-kitten/forge/internal/info.CommitHash={{.hash}}' -X 'github.com/cruious-kitten/forge/internal/info.BuildDate={{.date}}'" .
+
+- name: install
+  args:
+    - name: version
+      default: dev
+    - name: hash
+      default: 123#456
+    - name: date
+  description: Go install the local package
+  cmd: go install -v -ldflags="-X 'github.com/cruious-kitten/forge/internal/info.Version={{.version}}' -X 'github.com/cruious-kitten/forge/internal/info.CommitHash={{.hash}}' -X 'github.com/cruious-kitten/forge/internal/info.BuildDate={{.date}}'" .
+
+- name: fmt
+  cmd: |
+    go vet ./...
+    gofmt -s -w .
+
+- name: lint
+  cmd: |
+    golangci-lint run
 
 - name: git-tag
   cmd: git describe --tags --dirty --always
@@ -21,6 +40,8 @@ tools:
 forgeries:
   - name: release
     tools:
+    - name: fmt
+    - name: lint
     - name: build-date
       output: date
     - name: hash
@@ -28,6 +49,21 @@ forgeries:
     - name: git-tag
       output: tag
     - name: build
+      args:
+        version: output.tag
+        date: output.date
+        hash: output.hash
+  - name: install
+    tools:
+    - name: fmt
+    - name: lint
+    - name: build-date
+      output: date
+    - name: hash
+      output: hash
+    - name: git-tag
+      output: tag
+    - name: install
       args:
         version: output.tag
         date: output.date
